@@ -135,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CharacterStats.h" />
-    <ClInclude Include="DataCollected.h" />
     <ClInclude Include="HPTables.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

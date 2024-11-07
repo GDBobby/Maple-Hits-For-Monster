@@ -3,32 +3,40 @@
 #include <cstdint>
 #include <utility>
 
+struct DamageRange {
+	uint16_t min;
+	uint16_t max;
+};
+
 struct CharacterStats {
 	uint16_t level = 2;
-	uint16_t str = 18;
-	uint16_t dex = 4;
+	uint16_t mainStat = 18;
+	uint16_t subStat = 4;
 	uint8_t weaponDamage = 87;
 	uint16_t accuracy = 13;
-	std::pair<uint16_t, uint16_t> swing;
-	std::pair<uint16_t, uint16_t> stab;
+	DamageRange normal; //swing for pole arms
+	DamageRange weak; //stab for polearms
 	double averageDamage;
+	double skillPercentage = 100.0;
 
 	const double stabRatio = 0.4;
 	const double swingRatio = 0.6;
-	const double attackSpeed = 0.9;
-	const double mastery = 0.09;
+	double mastery = 0.1;
+	double statMulti = 5.0;
+	double statMultiLow = 3.0;
 
-	void rangeCalculation() {
-		swing.first = ((((str * 5)) * mastery) + dex) * weaponDamage / 100; //min
-		swing.second = (str * 5 + dex) * weaponDamage / 100; //max
-		stab.first = ((((str * 3)) * mastery) + dex) * weaponDamage / 100; //min
-		stab.second = (str * 3 + dex) * weaponDamage / 100; //min
-		//averageDamage = (static_cast<double>(str) * 5.0 * (mastery + 1.0) / 2.0 + static_cast<double>(dex)) * static_cast<double>(weaponDamage) / 100.0 * 0.6;
-		//averageDamage += (static_cast<double>(str) * 3.0 * (mastery + 1.0) / 2.0 + static_cast<double>(dex)) * static_cast<double>(weaponDamage) / 100.0 * 0.4;
-		//printf("averageDamage : %.1f \n", averageDamage);
-
-		averageDamage = (static_cast<double>(str) * 2.289 + static_cast<double>(dex)) * static_cast<double>(weaponDamage) / 100.0;
-		printf("averageDamage : %.1f \n", averageDamage);
+	void RangeCalculation() {
+		normal.min = 336;
+		normal.max = 691;
 
 	}
+
+};
+
+struct MonsterStats {
+	uint8_t level = 1;
+	uint16_t hp = 1;
+	uint8_t avoid = 0;
+	uint16_t defense = 0;
+	uint16_t exp = 3;
 };
