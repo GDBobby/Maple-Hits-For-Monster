@@ -75,7 +75,7 @@ namespace HPTables {
 #ifdef _DEBUG
         double expPerHit = 0.0;
         for (int i = 0; i < hpTables.back().size(); i++) {
-            if (hpTables.back()[i] > 0.001) {
+            if (hpTables.back()[i] > 0.000001) {
                 printf("\t %d:%.4f  \n", i + 1, hpTables.back()[i] * 100.0);
             }
             expPerHit += static_cast<double>(monsterStats.exp) * hpTables.back()[i] / static_cast<double>(i + 1);

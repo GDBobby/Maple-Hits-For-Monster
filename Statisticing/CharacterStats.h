@@ -25,10 +25,14 @@ struct CharacterStats {
 	double statMulti = 5.0;
 	double statMultiLow = 3.0;
 
-	void RangeCalculation() {
-		normal.min = 336;
-		normal.max = 691;
-
+	void CalculateRange() {
+		normal.max = (mainStat * 4.2 + subStat) * weaponDamage / 100;
+		normal.min = (mainStat * 3.6 * 0.9 * 0.6 + subStat) * weaponDamage / 100;
+		printf("calculated range %d ~ %d\n", normal.max, normal.min);
+	}
+	void ForceRange(int min, int max) {
+		normal.min = min;
+		normal.max = max;
 	}
 
 };

@@ -6,6 +6,7 @@
 #include "HPTables.h"
 
 #include <chrono>
+#include <random>
 
 /*
 * ayumilove
@@ -61,21 +62,86 @@ void PopulateTablesSwingStab(CharacterStats& charStats, uint16_t startingHP) {
     //HPTables::AddTable(hpTables, startingHP, charStats);
 }
 
+
+int32_t max_pl(int32_t a, int32_t b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}
+
+double Standard_Normal_CDF(double z) {
+    return 0.5 * (1.0 + std::erf(z / std::sqrt(2.0)));
+}
+
+void ProbabilityAlgorithm(CharacterStats& charStats, MonsterStats& monStats) {
+
+    const double levelDiff = static_cast<double>(max_pl(static_cast<int>(monStats.level) - static_cast<int>(charStats.level), 0));
+
+    charStats.normal.max = (static_cast<double>(charStats.normal.max) * charStats.skillPercentage / 100.0) * (1.0 - 0.01 * levelDiff) - static_cast<double>(monStats.defense) * 0.5;
+    charStats.normal.min = (static_cast<double>(charStats.normal.min) * charStats.skillPercentage / 100.0) * (1.0 - 0.01 * levelDiff) - static_cast<double>(monStats.defense) * 0.6;
+    printf("defense range - %d:%d\n", charStats.normal.min, charStats.normal.max);
+
+    const uint32_t avgDmg = (charStats.normal.max + charStats.normal.min) / 2;
+
+    const int maxHitsToKill = std::ceil(static_cast<double>(monStats.hp) / static_cast<double>(charStats.normal.min));
+    const int minHitsToKill = std::ceil(static_cast<double>(monStats.hp) / static_cast<double>(charStats.normal.max));
+    const double expectedHits = static_cast<double>(monStats.hp) / static_cast<double>(avgDmg);
+
+    std::vector<double> probabilities{};
+    probabilities.resize(maxHitsToKill - minHitsToKill + 1, 0.0);
+    for (int i = minHitsToKill; i <= maxHitsToKill; i++) {
+        const double meanDmg = static_cast<double>(avgDmg * i);
+        const double hitVariance = static_cast<double>(i) * static_cast<double>(std::pow(charStats.normal.max - charStats.normal.min, 2)) / 12.0;
+        const double hitStdDev = std::sqrt(hitVariance);
+        probabilities[i - minHitsToKill] = 1.0 - Standard_Normal_CDF((static_cast<double>(monStats.hp) - meanDmg) / hitStdDev);
+    }
+    for (int i = 0; i < probabilities.size(); i++) {
+        if (i != 0) {
+            printf("probability[%d] : %.3f\n", i + minHitsToKill, (probabilities[i] - probabilities[i - 1]) * 100.0);
+        }
+        else {
+            printf("probability[%d] : %.3f\n", i + minHitsToKill, probabilities[i] * 100.0);
+        }
+    }
+}
+
 int main() {
     CharacterStats characterStats{};
-    characterStats.level = 62;
-    characterStats.RangeCalculation();
+    characterStats.level = 60;
+    characterStats.mainStat = 251;
+    characterStats.subStat = 105;
+    characterStats.skillPercentage = 110.0;
+    characterStats.weaponDamage = 81 + 20;
+    characterStats.CalculateRange();
 
     MonsterStats monStats{};
-    monStats.hp = 5500;
+    monStats.hp = 3700;
     monStats.exp = 10;
-    monStats.level = 62;
-    monStats.defense = 0;
+    monStats.level = 59;
+    monStats.defense = 180;
 
     auto startingTime = std::chrono::high_resolution_clock::now();
     HPTables::AddTable(monStats, characterStats);
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startingTime).count();
-    printf("microseconds duration : %l \n", duration);
+    printf("microseconds duration : %zu \n", duration);
+
+    //MonsterStats skeleStats{};
+    //skeleStats.hp = 4500;
+    //skeleStats.level = 57;
+    //skeleStats.defense = 160;
+    //startingTime = std::chrono::high_resolution_clock::now();
+    //HPTables::AddTable(skeleStats, characterStats);
+    //duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startingTime).count();
+    //printf("microseconds duration : %zu \n", duration);
+
+    characterStats.CalculateRange();
+    startingTime = std::chrono::high_resolution_clock::now();
+    ProbabilityAlgorithm(characterStats, monStats);
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startingTime).count();
+    printf("microseconds duration : %zu \n", duration);
+
+    characterStats.ForceRange(359, 722);
 
 
     //MapData::calculateMapEfficiency(dataCollected);
